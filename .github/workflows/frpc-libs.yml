@@ -1,0 +1,141 @@
+name: Publish FRPC Libraries
+
+# ============================================================
+# 将 frpc 内网穿透动态库（libgojni.so）发布为 Release 附件
+#
+# 用途：App 内「下载 frpc 库」功能需从网络获取对应架构的 so 文件，
+#       本工作流从 app/libs/frpclib.aar 中提取并发布到 Releases。
+#
+# 触发：
+#   - 手动触发（推荐，首次需手动运行一次）
+#   - app/libs/frpclib.aar 变更时自动触发
+# ============================================================
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'frpc 库版本号（须与 Constants.kt 中的 FRPC_LIB_VERSION 一致）'
+        required: true
+        default: '0.57.0'
+  push:
+    paths:
+      - 'app/libs/frpclib.aar'
+    branches:
+      - main
+      - master
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    name: 提取并发布 frpc 动态库
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 确定版本号
+        id: ver
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VER="${{ github.event.inputs.version }}"
+          else
+            VER=$(grep -oP 'FRPC_LIB_VERSION\s*=\s*"\K[^"]+' \
+              app/src/main/kotlin/cn/ppps/forwarder/utils/Constants.kt || echo "0.57.0")
+          fi
+          echo "version=$VER" >> $GITHUB_OUTPUT
+          echo "tag=frpclib-$VER" >> $GITHUB_OUTPUT
+          echo "版本: $VER"
+
+      - name: 从 aar 提取 so 文件
+        run: |
+          set -e
+          AAR="app/libs/frpclib.aar"
+          OUT="frpc-assets"
+          mkdir -p "$OUT"
+
+          if [ ! -f "$AAR" ]; then
+            echo "错误：未找到 $AAR"
+            exit 1
+          fi
+
+          echo "=== aar 内容 ==="
+          unzip -l "$AAR" | grep -E "\.so$" || true
+
+          # 解压 jni 目录下的 so
+          unzip -o -q "$AAR" "jni/*" -d "$OUT" 2>/dev/null || true
+
+          echo ""
+          echo "=== 提取结果 ==="
+          find "$OUT" -name "*.so" -type f | sort
+
+          # 重命名为带架构后缀，便于按架构下载
+          mkdir -p frpc-final
+          found=0
+          for abi in arm64-v8a armeabi-v7a x86 x86_64; do
+            src="$OUT/jni/$abi/libgojni.so"
+            if [ -f "$src" ]; then
+              cp "$src" "frpc-final/libgojni-$abi.so"
+              echo "  libgojni-$abi.so  $(du -h "$src" | cut -f1)"
+              found=$((found + 1))
+            fi
+          done
+
+          if [ "$found" -eq 0 ]; then
+            echo "错误：未从 aar 中提取到任何 so 文件"
+            exit 1
+          fi
+
+          # 生成校验文件
+          cd frpc-final
+          sha256sum *.so > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
+          echo "共提取 $found 个架构"
+
+      - name: 发布 frpc 库 Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          TAG="${{ steps.ver.outputs.tag }}"
+
+          # 已存在则先删除，保证可重跑
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release 已存在，先删除"
+            gh release delete "$TAG" --yes --cleanup-tag || true
+            sleep 3
+          fi
+
+          gh release create "$TAG" \
+            --title "FRPC Libraries ${{ steps.ver.outputs.version }}" \
+            --notes "内网穿透动态库（libgojni.so），供 App 内「下载 frpc 库」功能使用。
+
+          ## 包含架构
+
+          | 文件 | 架构 |
+          |---|---|
+          | \`libgojni-arm64-v8a.so\` | ARM 64 位（现代手机） |
+          | \`libgojni-armeabi-v7a.so\` | ARM 32 位（老机型） |
+          | \`libgojni-x86.so\` | x86（模拟器） |
+          | \`libgojni-x86_64.so\` | x86_64（模拟器） |
+
+          ## 用途
+
+          本 Release 不含应用本体，仅提供内网穿透所需的原生库。
+          应用会在需要时自动按设备架构下载对应文件。
+
+          SHA256 校验值见附件 \`SHA256SUMS.txt\`。" \
+            --prerelease
+
+          echo "=== 上传附件 ==="
+          for f in frpc-final/*.so frpc-final/SHA256SUMS.txt; do
+            echo "上传: $(basename $f)"
+            gh release upload "$TAG" "$f" --clobber
+          done
+
+          echo "=== 最终清单 ==="
+          gh release view "$TAG" --json assets --jq '.assets[] | "\(.name)  \(.size) bytes"'
