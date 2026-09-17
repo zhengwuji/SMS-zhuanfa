@@ -4,7 +4,7 @@
 
 [中文版](README.md)
 
-[![GitHub release](https://img.shields.io/github/release/pppscn/SmsForwarder.svg)](https://github.com/pppscn/SmsForwarder/releases) [![GitHub stars](https://img.shields.io/github/stars/pppscn/SmsForwarder)](https://github.com/pppscn/SmsForwarder/stargazers) [![GitHub forks](https://img.shields.io/github/forks/pppscn/SmsForwarder)](https://github.com/pppscn/SmsForwarder/network/members) [![GitHub issues](https://img.shields.io/github/issues/pppscn/SmsForwarder)](https://github.com/pppscn/SmsForwarder/issues) [![GitHub license](https://img.shields.io/github/license/pppscn/SmsForwarder)](https://github.com/pppscn/SmsForwarder/blob/main/LICENSE)
+[![GitHub release](https://img.shields.io/github/release/zhengwuji/SMS-zhuanfa.svg)](https://github.com/zhengwuji/SMS-zhuanfa/releases) [![GitHub stars](https://img.shields.io/github/stars/zhengwuji/SMS-zhuanfa)](https://github.com/zhengwuji/SMS-zhuanfa/stargazers) [![GitHub forks](https://img.shields.io/github/forks/zhengwuji/SMS-zhuanfa)](https://github.com/zhengwuji/SMS-zhuanfa/network/members) [![GitHub issues](https://img.shields.io/github/issues/zhengwuji/SMS-zhuanfa)](https://github.com/zhengwuji/SMS-zhuanfa/issues) [![GitHub license](https://img.shields.io/github/license/zhengwuji/SMS-zhuanfa)](https://github.com/zhengwuji/SMS-zhuanfa/blob/main/LICENSE)
 
 --------
 
@@ -24,7 +24,7 @@ Automated Tasks & Quick Commands, effortlessly automate your life, doubling your
 
 **Upgrade Instructions:**
 - After joining the SmsF Preview Experience Program, update online (available from `About Software` page, applicable for `v3.3.0_240305+`).
-- Manual download: [https://github.com/pppscn/SmsForwarder/actions/workflows/Weekly_Build.yml](https://github.com/pppscn/SmsForwarder/actions/workflows/Weekly_Build.yml)
+- Manual download: [https://github.com/zhengwuji/SMS-zhuanfa/actions/workflows/Weekly_Build.yml](https://github.com/zhengwuji/SMS-zhuanfa/actions/workflows/Weekly_Build.yml)
 
 --------
 
@@ -50,13 +50,13 @@ Automated Tasks & Quick Commands, effortlessly automate your life, doubling your
 
 ![Screenshots](pic/screenshots.jpg "screenshots.jpg")
 
-See more screenshots：https://github.com/pppscn/SmsForwarder/wiki
+See more screenshots：https://github.com/zhengwuji/SMS-zhuanfa/wiki
 
 --------
 
 ## Download
 
-> ⚠ Repo address: https://github.com/pppscn/SmsForwarder/releases
+> ⚠ Repo address: https://github.com/zhengwuji/SMS-zhuanfa/releases
 
 > ⚠ Repo mirror in China: https://gitee.com/pp/SmsForwarder/releases
 
@@ -64,7 +64,7 @@ See more screenshots：https://github.com/pppscn/SmsForwarder/wiki
 
 ## Manual
 
-> ⚠ GitHub: https://github.com/pppscn/SmsForwarder/wiki
+> ⚠ GitHub: https://github.com/zhengwuji/SMS-zhuanfa/wiki
 
 > ⚠ Gitee: https://gitee.com/pp/SmsForwarder/wikis/pages
 
@@ -103,11 +103,11 @@ See more screenshots：https://github.com/pppscn/SmsForwarder/wiki
 
 ## Star this repo if you find this application useful!
 
-<a href="https://star-history.com/#pppscn/SmsForwarder&Date">
+<a href="https://star-history.com/#zhengwuji/SMS-zhuanfa&Date">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=pppscn/SmsForwarder&type=Date&theme=dark" />
-    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=pppscn/SmsForwarder&type=Date" />
-    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=pppscn/SmsForwarder&type=Date" />
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=zhengwuji/SMS-zhuanfa&type=Date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=zhengwuji/SMS-zhuanfa&type=Date" />
+    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=zhengwuji/SMS-zhuanfa&type=Date" />
   </picture>
 </a>
 
