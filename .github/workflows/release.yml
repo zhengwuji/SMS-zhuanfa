@@ -317,21 +317,83 @@ jobs:
           retention-days: 30
 
       # ---------- 13. 发布到 Releases ----------
-      - name: 发布 Release
+      # 用 gh CLI 逐个上传：比 action 更稳，可精确重试，避免大文件上传挂起
+      - name: 发布 Release 并上传 APK
         if: |
           github.event_name != 'workflow_dispatch' ||
           github.event.inputs.release_type != 'none'
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ steps.version.outputs.tag }}
-          name: "SMS-zhuanfa ${{ steps.version.outputs.base_version }} (${{ steps.version.outputs.short_sha }})"
-          body_path: CHANGELOG_BODY.md
-          files: |
-            release-assets/*.apk
-            release-assets/SHA256SUMS.txt
-          draft: false
-          prerelease: ${{ github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/') || github.event.inputs.release_type == 'prerelease' }}
-          generate_release_notes: false
+        run: |
+          set -e
+          TAG="${{ steps.version.outputs.tag }}"
+          TITLE="SMS-zhuanfa ${{ steps.version.outputs.base_version }} (${{ steps.version.outputs.short_sha }})"
+
+          # 判断是否预发布
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            if [ "${{ github.event.inputs.release_type }}" = "release" ]; then
+              PRE_FLAG=""
+            else
+              PRE_FLAG="--prerelease"
+            fi
+          elif [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            PRE_FLAG=""
+          else
+            PRE_FLAG="--prerelease"
+          fi
+
+          echo "标签: $TAG"
+          echo "标题: $TITLE"
+          echo "预发布参数: ${PRE_FLAG:-（正式版）}"
+
+          # 若 Release 已存在则先删除，保证可重跑
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release 已存在，先删除以便重建"
+            gh release delete "$TAG" --yes --cleanup-tag || true
+            sleep 3
+          fi
+
+          # 创建 Release（正文来自自动生成的更新说明）
+          gh release create "$TAG" \
+            --title "$TITLE" \
+            --notes-file CHANGELOG_BODY.md \
+            $PRE_FLAG
+
+          echo "=== 开始上传附件 ==="
+
+          # 逐个上传，每个文件最多重试 3 次
+          upload_one() {
+            local f="$1"
+            local name
+            name=$(basename "$f")
+            for attempt in 1 2 3; do
+              echo "[$attempt/3] 上传 $name ..."
+              if gh release upload "$TAG" "$f" --clobber; then
+                echo "成功: $name"
+                return 0
+              fi
+              echo "失败，等待 10 秒后重试: $name"
+              sleep 10
+            done
+            echo "最终失败: $name"
+            return 1
+          }
+
+          FAILED=0
+          # 先传校验文件（小），再传 APK
+          upload_one "release-assets/SHA256SUMS.txt" || FAILED=1
+          for f in release-assets/*.apk; do
+            upload_one "$f" || FAILED=1
+          done
+
+          echo "=== 最终附件清单 ==="
+          gh release view "$TAG" --json assets \
+            --jq '.assets[] | "\(.name)  \(.size) bytes"'
+
+          if [ "$FAILED" -eq 1 ]; then
+            echo "部分附件上传失败"
+            exit 1
+          fi
+
+          echo "全部附件上传完成"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
