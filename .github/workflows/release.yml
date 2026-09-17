@@ -121,19 +121,45 @@ jobs:
         with:
           cache-read-only: false
 
-      # ---------- 5. 生成签名文件 ----------
-      - name: 生成签名密钥
+      # ---------- 5. 准备签名密钥 ----------
+      # 优先级：① GitHub Secret（固定签名，推荐）→ ② Actions 缓存 → ③ 新生成
+      # 目的：保证不同构建之间签名一致，APK 可直接覆盖安装
+      - name: 恢复缓存的签名密钥
+        id: keystore_cache
+        uses: actions/cache@v4
+        with:
+          path: keystore/pppscn.jks
+          key: android-keystore-pppscn-v1
+
+      - name: 准备签名密钥
         run: |
           set -e
           mkdir -p keystore
-          keytool -genkeypair -v \
-            -keystore keystore/pppscn.jks \
-            -alias pppscn \
-            -keyalg RSA -keysize 2048 -validity 10950 \
-            -storepass pppscn -keypass pppscn \
-            -dname "CN=pppscn, OU=Dev, O=local, L=Beijing, ST=Beijing, C=CN"
 
-          # 用 printf 写入，避免 heredoc 缩进污染 properties 键名
+          if [ -n "${{ secrets.KEYSTORE_BASE64 }}" ]; then
+            # ① 使用 Secret 中的固定密钥（最可靠）
+            echo "✅ 使用 GitHub Secret 中的固定签名密钥"
+            echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > keystore/pppscn.jks
+            echo "签名来源: Secret" >> $GITHUB_ENV
+
+          elif [ -f keystore/pppscn.jks ]; then
+            # ② 使用缓存恢复的密钥
+            echo "✅ 使用 Actions 缓存恢复的签名密钥"
+            echo "签名来源: Cache" >> $GITHUB_ENV
+
+          else
+            # ③ 首次运行，生成新密钥（之后会被缓存复用）
+            echo "⚠️ 未找到固定密钥，生成新的（后续构建将复用此密钥）"
+            keytool -genkeypair -v \
+              -keystore keystore/pppscn.jks \
+              -alias pppscn \
+              -keyalg RSA -keysize 2048 -validity 10950 \
+              -storepass pppscn -keypass pppscn \
+              -dname "CN=pppscn, OU=Dev, O=local, L=Beijing, ST=Beijing, C=CN"
+            echo "签名来源: Generated" >> $GITHUB_ENV
+          fi
+
+          # 写出签名配置（printf 避免缩进污染键名）
           printf '%s\n' \
             'storeFile=../keystore/pppscn.jks' \
             'storePassword=pppscn' \
@@ -141,8 +167,13 @@ jobs:
             'keyPassword=pppscn' \
             > keystore/keystore.properties
 
-          echo "=== keystore.properties 内容 ==="
+          echo "=== 签名配置 ==="
           cat keystore/keystore.properties
+
+          # 输出证书指纹，便于核对签名一致性
+          echo "=== 签到证书指纹 ==="
+          keytool -list -keystore keystore/pppscn.jks -storepass pppscn \
+            | grep -E "SHA256|SHA-256" || true
 
       # ---------- 6. 设置 local.properties ----------
       - name: 配置 SDK 路径
@@ -285,11 +316,9 @@ jobs:
             echo ""
             echo "| 文件 | 适用设备 |"
             echo "|---|---|"
-            echo "| \`*_universal_release.apk\` | **通用包，推荐** |"
-            echo "| \`*_arm64-v8a_release.apk\` | 现代手机（arm64） |"
+            echo "| \`*_universal_release.apk\` | **通用包，推荐**（含全部架构） |"
+            echo "| \`*_arm64-v8a_release.apk\` | 现代手机（2016 年后） |"
             echo "| \`*_armeabi-v7a_release.apk\` | 老机型（32 位 ARM） |"
-            echo "| \`*_x86_release.apk\` | x86 模拟器 |"
-            echo "| \`*_x86_64_release.apk\` | x86_64 模拟器 |"
             echo ""
             echo "APK 的 SHA256 校验值见附件 \`SHA256SUMS.txt\`。"
             echo ""
