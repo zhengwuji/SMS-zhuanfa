@@ -63,7 +63,7 @@ class FeishuUtils private constructor() {
         {
             "elements": [
                 {
-                    "content": "[SmsForwarder](https://github.com/pppscn/SmsForwarder)",
+                    "content": "[SmsForwarder](https://github.com/zhengwuji/SMS-zhuanfa)",
                     "tag": "lark_md"
                 }
             ],

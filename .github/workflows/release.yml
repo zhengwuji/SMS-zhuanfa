@@ -129,37 +129,65 @@ jobs:
         uses: actions/cache@v4
         with:
           path: keystore/pppscn.jks
-          key: android-keystore-pppscn-v1
+          # v2：修复早期版本可能缓存了无效文件的问题
+          key: android-keystore-pppscn-v2
 
       - name: 准备签名密钥
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
         run: |
           set -e
+          echo "=== 签名密钥准备 ==="
           mkdir -p keystore
 
-          if [ -n "${{ secrets.KEYSTORE_BASE64 }}" ]; then
-            # ① 使用 Secret 中的固定密钥（最可靠）
-            echo "✅ 使用 GitHub Secret 中的固定签名密钥"
-            echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > keystore/pppscn.jks
-            echo "签名来源: Secret" >> $GITHUB_ENV
+          SOURCE=""
 
-          elif [ -f keystore/pppscn.jks ]; then
-            # ② 使用缓存恢复的密钥
-            echo "✅ 使用 Actions 缓存恢复的签名密钥"
-            echo "签名来源: Cache" >> $GITHUB_ENV
+          # ① 优先使用 Secret 中的固定密钥
+          if [ -n "${KEYSTORE_BASE64:-}" ]; then
+            echo "检测到 Secret，解码固定密钥..."
+            if echo "$KEYSTORE_BASE64" | base64 -d > keystore/pppscn.jks 2>/dev/null \
+               && [ -s keystore/pppscn.jks ]; then
+              echo "解码成功"
+              SOURCE="Secret"
+            else
+              echo "解码失败，回退到其他方式"
+              rm -f keystore/pppscn.jks
+            fi
+          fi
 
-          else
-            # ③ 首次运行，生成新密钥（之后会被缓存复用）
-            echo "⚠️ 未找到固定密钥，生成新的（后续构建将复用此密钥）"
-            keytool -genkeypair -v \
+          # ② 使用缓存恢复的密钥（校验文件有效性，避免半成品）
+          if [ -z "$SOURCE" ] && [ -s keystore/pppscn.jks ]; then
+            if keytool -list -keystore keystore/pppscn.jks -storepass pppscn >/dev/null 2>&1; then
+              echo "使用缓存中的有效密钥"
+              SOURCE="Cache"
+            else
+              echo "缓存密钥无效，将重新生成"
+              rm -f keystore/pppscn.jks
+            fi
+          fi
+
+          # ③ 生成新密钥
+          if [ -z "$SOURCE" ]; then
+            echo "生成新的签名密钥（后续构建将通过缓存复用）"
+            keytool -genkeypair \
               -keystore keystore/pppscn.jks \
               -alias pppscn \
               -keyalg RSA -keysize 2048 -validity 10950 \
               -storepass pppscn -keypass pppscn \
               -dname "CN=pppscn, OU=Dev, O=local, L=Beijing, ST=Beijing, C=CN"
-            echo "签名来源: Generated" >> $GITHUB_ENV
+            SOURCE="Generated"
           fi
 
-          # 写出签名配置（printf 避免缩进污染键名）
+          # 写出版本信息供后续步骤引用
+          echo "KEYSTORE_SOURCE=$SOURCE" >> $GITHUB_ENV
+
+          # 校验最终密钥可用
+          if ! keytool -list -keystore keystore/pppscn.jks -storepass pppscn >/dev/null 2>&1; then
+            echo "错误：签名密钥不可用"
+            exit 1
+          fi
+
+          # 写出签名配置
           printf '%s\n' \
             'storeFile=../keystore/pppscn.jks' \
             'storePassword=pppscn' \
@@ -170,10 +198,10 @@ jobs:
           echo "=== 签名配置 ==="
           cat keystore/keystore.properties
 
-          # 输出证书指纹，便于核对签名一致性
-          echo "=== 签到证书指纹 ==="
-          keytool -list -keystore keystore/pppscn.jks -storepass pppscn \
-            | grep -E "SHA256|SHA-256" || true
+          echo "=== 签名来源: $SOURCE ==="
+          echo "=== 证书指纹 ==="
+          keytool -list -keystore keystore/pppscn.jks -storepass pppscn 2>/dev/null \
+            | grep -iE "SHA256|SHA-256" || echo "（未获取）"
 
       # ---------- 6. 设置 local.properties ----------
       - name: 配置 SDK 路径
@@ -210,12 +238,33 @@ jobs:
 
           cd "$OUT_DIR"
           sha256sum *.apk > SHA256SUMS.txt
+          echo "=== SHA256 校验值 ==="
           cat SHA256SUMS.txt
+
+          # 校验签名有效性
+          echo ""
+          echo "=== 签名校验 ==="
+          APKSIGNER=$(find "$ANDROID_SDK_ROOT/build-tools" -name apksigner -type f 2>/dev/null | sort -V | tail -1)
+          if [ -n "$APKSIGNER" ]; then
+            for apk in *.apk; do
+              if "$APKSIGNER" verify --print-certs "$apk" > /tmp/sig.txt 2>&1; then
+                DN=$(grep -i "certificate DN" /tmp/sig.txt | head -1 | cut -d: -f2- | xargs)
+                echo "  OK   $apk  [$DN]"
+              else
+                echo "  FAIL $apk 签名校验失败"
+                cat /tmp/sig.txt
+                exit 1
+              fi
+            done
+          else
+            echo "  未找到 apksigner，跳过校验"
+          fi
 
           COUNT=$(ls -1 *.apk | wc -l)
           TOTAL=$(du -sh . | cut -f1)
           echo "apk_count=$COUNT" >> $GITHUB_OUTPUT
           echo "total_size=$TOTAL" >> $GITHUB_OUTPUT
+          echo "签名校验通过，共 $COUNT 个 APK"
 
       # ---------- 10. 生成版本号与标签 ----------
       - name: 生成版本标识
@@ -423,6 +472,28 @@ jobs:
           fi
 
           echo "全部附件上传完成"
+
+          # ---------- 清理旧的 Pre-release，只保留最近 N 个 ----------
+          KEEP_COUNT=5
+          echo ""
+          echo "=== 清理旧版本（保留最近 $KEEP_COUNT 个预发布）==="
+
+          # 只清理预发布版本，正式版（无 --prerelease 标记）永久保留
+          OLD_TAGS=$(gh release list --limit 100 --json tagName,isPrerelease,createdAt \
+            --jq '[.[] | select(.isPrerelease == true)] | sort_by(.createdAt) | reverse | .['"$KEEP_COUNT"':] | .[].tagName' 2>/dev/null || echo "")
+
+          if [ -n "$OLD_TAGS" ]; then
+            for old_tag in $OLD_TAGS; do
+              echo "  删除旧预发布: $old_tag"
+              gh release delete "$old_tag" --yes --cleanup-tag || echo "    删除失败，跳过"
+            done
+          else
+            echo "  无需清理"
+          fi
+
+          echo ""
+          echo "=== 当前 Release 列表 ==="
+          gh release list --limit 10
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

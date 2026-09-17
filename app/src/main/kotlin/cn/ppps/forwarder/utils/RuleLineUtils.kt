@@ -16,7 +16,7 @@ object RuleLineUtils {
         val a = """并且 是 手机号 相等 10086
  或者 是 手机号 结尾 哈哈哈
   并且 是 短信内容 包含 test
- 或者 是 手机号 结尾 pppscn
+ 或者 是 手机号 结尾 zhengwuji
 并且 是 手机号 相等 100861
 并且 是 手机号 相等 100861"""
         val msg = MsgInfo("sms", "10086", "哈哈哈", Date(), "15888888888")

@@ -10,7 +10,7 @@ import kotlin.reflect.KProperty
 /**
  * 转发历史工具类
  *
- * @author pppscn
+ * @author zhengwuji
  * @since 2022年5月9日
  */
 @Suppress("UNCHECKED_CAST", "unused")

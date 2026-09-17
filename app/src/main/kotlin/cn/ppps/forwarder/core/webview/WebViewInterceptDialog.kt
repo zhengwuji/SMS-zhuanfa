@@ -95,8 +95,8 @@ class WebViewInterceptDialog : AppCompatActivity(), DialogInterface.OnDismissLis
     companion object {
         private const val KEY_INTERCEPT_URL = "key_intercept_url"
 
-        // TODO: 修改你的applink
-        const val APP_LINK_HOST = "ppps.cn"
+        // AppLink 拦截域名
+        const val APP_LINK_HOST = "github.com"
         const val APP_LINK_ACTION = "cn.ppps.forwarder"
 
         /**

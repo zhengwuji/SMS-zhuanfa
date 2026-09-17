@@ -79,17 +79,17 @@
     <string name="about_item_wechat_miniprogram" formatted="false">WeChat MiniProgram</string>
     <string name="about_cache_purged">Cache cleared</string>
     <string name="about_frpc_deleted">Frpc Deleted, App restarting</string>
-    <string name="about_copyright">© %1$s PPPSCN All rights reserved.</string>
+    <string name="about_copyright">© %1$s SMS-zhuanfa</string>
     <string name="about_item_open_source">OpenSource Repo</string>
     <string name="about_item_github">GitHub</string>
     <string name="about_item_gitee">Gitee</string>
     <string name="about_item_donation_link">Reward List</string>
-    <string name="url_project_github">https://github.com/pppscn/SmsForwarder</string>
-    <string name="url_project_gitee">https://gitee.com/pp/SmsForwarder</string>
-    <string name="url_help">https://gitee.com/pp/SmsForwarder/wikis/pages</string>
-    <string name="url_donation_link">https://gitee.com/pp/SmsForwarder.wiki/raw/master/%E6%89%93%E8%B5%8F%E5%90%8D%E5%8D%95.md</string>
-    <string name="url_wechat_miniprogram">https://gitee.com/pp/SmsForwarder/raw/main/pic/wechat_miniprogram.jpg</string>
-    <string name="url_tips">https://gitee.com/pp/SmsForwarder.wiki/raw/master/tips_en.json</string>
+    <string name="url_project_github">https://github.com/zhengwuji/SMS-zhuanfa</string>
+    <string name="url_project_gitee">https://github.com/zhengwuji/SMS-zhuanfa</string>
+    <string name="url_help">https://github.com/zhengwuji/SMS-zhuanfa#readme</string>
+    <string name="url_donation_link">https://github.com/zhengwuji/SMS-zhuanfa</string>
+    <string name="url_wechat_miniprogram">https://github.com/zhengwuji/SMS-zhuanfa</string>
+    <string name="url_tips">https://github.com/zhengwuji/SMS-zhuanfa</string>
 
     <string name="lab_yes">Yes</string>
     <string name="lab_no">No</string>
@@ -137,7 +137,7 @@
     <string name="tipServiceRunning">Frpc service is running</string>
     <string name="tipWaitService">Starting service</string>
 
-    <string name="app_name">SmsForwarder</string>
+    <string name="app_name">SMS-zhuanfa</string>
     <string name="notification_content">Not only forwarding messages, \nbut also a must-have for backup devices!\nFree and open source, no selling!</string>
     <!--Common-->
     <string name="cancel">Cancel</string>
@@ -412,7 +412,7 @@
     <string name="system_app">System App</string>
     <string name="tips_get_installed_apps">Please grant GET_INSTALLED_APPS permission</string>
     <string name="tips_notification">Please grant Notification permission, in order to keep the App alive!</string>
-    <string name="tips_notification_listener">Please grant Notification reading permission to SmsForwarder, before other Apps\'s notification could be forwarded. Forwarding automatically canceled!</string>
+    <string name="tips_notification_listener">Please grant Notification reading permission to SMS-zhuanfa, before other Apps\'s notification could be forwarded. Forwarding automatically canceled!</string>
     <string name="pushplus_website">Official website</string>
     <string name="pushplus_plus">www.pushplus.plus</string>
     <string name="pushplus_hxtrip">pushplus.hxtrip.com</string>
@@ -461,7 +461,7 @@
     <string name="client_id">Client Id</string>
     <string name="client_id_hint">Random value if empty</string>
     <string name="GotifyWebServer">WebServer</string>
-    <string name="GotifyWebServerTips"><![CDATA[eg.: https://push.ppps.cn/message?token=<apptoken>]]></string>
+    <string name="GotifyWebServerTips"><![CDATA[eg.: https://your-gotify-server/message?token=<apptoken>]]></string>
     <string name="title_template">Title Template</string>
     <string name="auto_copy">Auto Copy</string>
     <string name="priority">Priority（1 – 9）</string>
@@ -609,7 +609,7 @@
     <string name="bark_badge">Message Badge</string>
     <string name="bark_badge_tips">Opt., e.g. 888</string>
     <string name="bark_url">Message Link</string>
-    <string name="bark_url_tips">Opt., e.g. https://github.com/pppscn/SmsForwarder</string>
+    <string name="bark_url_tips">Opt., e.g. https://github.com/zhengwuji/SMS-zhuanfa</string>
     <string name="bark_level">Notification Level</string>
     <string name="bark_level_critical">Critical alert: Rings even in silent mode</string>
     <string name="bark_level_active">Immediately display notifications</string>

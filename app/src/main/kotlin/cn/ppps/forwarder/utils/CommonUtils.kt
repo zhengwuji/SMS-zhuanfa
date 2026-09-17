@@ -63,7 +63,7 @@ class CommonUtils private constructor() {
         /**
          * 这里填写你的应用隐私政策网页地址
          */
-        private const val PRIVACY_URL = "https://gitee.com/pp/SmsForwarder/raw/main/PRIVACY"
+        private const val PRIVACY_URL = "https://raw.githubusercontent.com/zhengwuji/SMS-zhuanfa/main/PRIVACY"
 
         /**
          * 显示隐私政策的提示
@@ -230,7 +230,7 @@ class CommonUtils private constructor() {
                     //TODO:怎么测试反向引用是否正确？
                     /*val replacement = it.groupValues[2]
                     if (replacement.isNotEmpty()) {
-                        "pppscn/SmsForwarder".replace(regex, replacement)
+                        "zhengwuji/SMS-zhuanfa".replace(regex, replacement)
                     }*/
                 } catch (e: Exception) {
                     return String.format(getString(R.string.invalid_tag), it.value, e.message)

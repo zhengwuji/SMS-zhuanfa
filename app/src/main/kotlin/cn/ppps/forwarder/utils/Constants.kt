@@ -157,7 +157,10 @@ const val FRONT_CHANNEL_ID = "cn.ppps.forwarder"
 const val FRONT_CHANNEL_NAME = "SmsForwarder Foreground Service"
 
 //Frp内网穿透
-const val FRPC_LIB_DOWNLOAD_URL = "https://xupdate.ppps.cn/uploads/%s/%s/libgojni.so"
+// 动态库托管在本仓库 Release 的 frpclib-{version} 标签下
+// 格式：https://github.com/{owner}/{repo}/releases/download/frpclib-{version}/libgojni-{abi}.so
+const val FRPC_LIB_DOWNLOAD_URL =
+    "https://github.com/zhengwuji/SMS-zhuanfa/releases/download/frpclib-%s/libgojni-%s.so"
 const val FRPC_LIB_VERSION = "0.57.0"
 const val EVENT_FRPC_UPDATE_CONFIG = "EVENT_FRPC_UPDATE_CONFIG"
 const val EVENT_FRPC_DELETE_CONFIG = "EVENT_FRPC_DELETE_CONFIG"
@@ -202,8 +205,15 @@ const val EVENT_KEY_SIM_SLOT = "EVENT_KEY_SIM_SLOT"
 const val EVENT_KEY_PHONE_NUMBERS = "EVENT_KEY_PHONE_NUMBERS"
 
 //在线升级&预览计划URL
-const val KEY_UPDATE_URL = "https://xupdate.ppps.cn/update/checkVersion"
-const val KEY_PREVIEW_URL = "https://xupdate.ppps.cn/preview/checkVersion"
+// 使用本仓库 GitHub Releases 作为更新源（返回格式由 GitHubUpdateParser 转换）
+// 正式版：只取非预发布的最新 Release
+// 预览版：取最新 Release（含预发布）
+const val GITHUB_REPO_OWNER = "zhengwuji"
+const val GITHUB_REPO_NAME = "SMS-zhuanfa"
+const val KEY_UPDATE_URL =
+    "https://api.github.com/repos/$GITHUB_REPO_OWNER/$GITHUB_REPO_NAME/releases/latest"
+const val KEY_PREVIEW_URL =
+    "https://api.github.com/repos/$GITHUB_REPO_OWNER/$GITHUB_REPO_NAME/releases?per_page=1"
 
 //HttpServer相关
 const val HTTP_SERVER_PORT = 5000

@@ -7,19 +7,19 @@
     },
     {
       "title": "防诈提醒",
-      "content": "本软件不参与任何刷单返利担保！请您远离刷单返利陷阱，谨防网络诈骗！<br />\n请再次确认是否出于本人自用需要自愿安装？！<br />\n否则，请立即卸载！"
+      "content": "本软件完全免费开源，不参与任何刷单返利担保！请您远离刷单返利陷阱，谨防网络诈骗！<br />\n请再次确认是否出于本人自用需要自愿安装？！<br />\n否则，请立即卸载！"
     },
     {
       "title": "新用户必读",
-      "content": "开始设置之前，请您认真地看一遍 <a href=\"https://gitee.com/pp/SmsForwarder/wikis/pages\"><font color=\"#800080\">Wiki</font></a> ！<br />\n遇到问题，请按照 <a href=\"https://gitee.com/pp/SmsForwarder/wikis/pages?sort_id=4877445&doc_id=1821427\"><font color=\"#0000FF\">常见问题</font></a> 章节进行排查！<br />\n没找到答案的，再加入互助交流群提问，请清楚地描述问题，并给出对应的配置截图与相关日志，方便大家直观的判断问题！ "
+      "content": "开始设置之前，请先阅读项目文档：<a href=\"https://github.com/zhengwuji/SMS-zhuanfa#readme\"><font color=\"#800080\">README 使用教程</font></a> ！<br />\n文档中包含完整的功能介绍、配置教程与常见问题解答。<br />\n如仍未能解决，请前往 <a href=\"https://github.com/zhengwuji/SMS-zhuanfa/issues\"><font color=\"#0000FF\">Issues</font></a> 反馈问题，请清楚地描述问题，并给出对应的配置截图与相关日志，方便直观地判断问题！"
     },
     {
-      "title": "SmsF 互助交流群",
-      "content": "<a href=\"https://t.me/+QBZgnL_fxYM0NjE9\">Telegram 群组</a>"
+      "title": "版本更新",
+      "content": "新版本会发布在 <a href=\"https://github.com/zhengwuji/SMS-zhuanfa/releases\">GitHub Releases</a>，可在「关于软件」页面检查更新，或直接前往下载页面获取最新版本。"
     },
     {
-      "title": "打赏名单",
-      "content": "感谢热心网友们对开源项目的喜爱和支持！<a href=\"https://gitee.com/pp/SmsForwarder/wikis/pages?sort_id=4912193&doc_id=1821427\"><font color=\"#800080\">查看赞助名单！</font></a>"
+      "title": "开源许可",
+      "content": "本项目基于 BSD-2-Clause 许可开源。<a href=\"https://github.com/zhengwuji/SMS-zhuanfa\"><font color=\"#800080\">查看项目源码</font></a>"
     }
   ]
 }

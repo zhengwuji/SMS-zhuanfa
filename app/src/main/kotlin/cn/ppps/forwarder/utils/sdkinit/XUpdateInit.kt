@@ -8,6 +8,7 @@ import cn.ppps.forwarder.utils.KEY_PREVIEW_URL
 import cn.ppps.forwarder.utils.KEY_UPDATE_URL
 import cn.ppps.forwarder.utils.update.CustomUpdateDownloader
 import cn.ppps.forwarder.utils.update.CustomUpdateFailureListener
+import cn.ppps.forwarder.utils.update.GitHubUpdateParser
 import cn.ppps.forwarder.utils.update.XHttpUpdateHttpServiceImpl
 import com.xuexiang.xupdate.XUpdate
 import com.xuexiang.xupdate.utils.UpdateUtils
@@ -46,6 +47,8 @@ class XUpdateInit private constructor() {
                 //这个必须设置！实现网络请求功能。
                 .setIUpdateHttpService(XHttpUpdateHttpServiceImpl())
                 .setIUpdateDownLoader(CustomUpdateDownloader())
+                // GitHub Releases 返回格式与 XUpdate 默认格式不同，需自定义解析
+                .setIUpdateParser(GitHubUpdateParser())
                 //这个必须初始化
                 .init(application)
         }
