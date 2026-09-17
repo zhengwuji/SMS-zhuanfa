@@ -55,13 +55,65 @@ jobs:
           java-version: '17'
 
       # ---------- 3. 配置 Android SDK ----------
+      # ubuntu-latest 镜像已预装 Android SDK，直接复用，避免第三方 action 的不确定性
       - name: 配置 Android SDK
-        uses: android-actions/setup-android@v3
+        run: |
+          set -e
+          # 定位预装的 SDK
+          if [ -d "/usr/local/lib/android/sdk" ]; then
+            SDK_ROOT="/usr/local/lib/android/sdk"
+          elif [ -n "$ANDROID_SDK_ROOT" ] && [ -d "$ANDROID_SDK_ROOT" ]; then
+            SDK_ROOT="$ANDROID_SDK_ROOT"
+          elif [ -n "$ANDROID_HOME" ] && [ -d "$ANDROID_HOME" ]; then
+            SDK_ROOT="$ANDROID_HOME"
+          else
+            echo "未找到预装 SDK，执行安装"
+            mkdir -p "$HOME/android-sdk/cmdline-tools"
+            cd /tmp
+            curl -sSL -o cmdline-tools.zip \
+              https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+            unzip -q cmdline-tools.zip -d /tmp/ct
+            mkdir -p "$HOME/android-sdk/cmdline-tools/latest"
+            mv /tmp/ct/cmdline-tools/* "$HOME/android-sdk/cmdline-tools/latest/"
+            SDK_ROOT="$HOME/android-sdk"
+          fi
+
+          echo "SDK_ROOT=$SDK_ROOT"
+          echo "ANDROID_SDK_ROOT=$SDK_ROOT" >> $GITHUB_ENV
+          echo "ANDROID_HOME=$SDK_ROOT" >> $GITHUB_ENV
+
+          # 定位 sdkmanager
+          if [ -x "$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" ]; then
+            SDKMGR="$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
+          elif [ -x "$SDK_ROOT/cmdline-tools/bin/sdkmanager" ]; then
+            SDKMGR="$SDK_ROOT/cmdline-tools/bin/sdkmanager"
+          else
+            SDKMGR=$(find "$SDK_ROOT" -name sdkmanager -type f 2>/dev/null | head -1)
+          fi
+
+          echo "SDKMANAGER=$SDKMGR"
+          if [ -z "$SDKMGR" ]; then
+            echo "未找到 sdkmanager"
+            ls -la "$SDK_ROOT" || true
+            exit 1
+          fi
+          echo "SDKMGR=$SDKMGR" >> $GITHUB_ENV
+
+          # 加入 PATH
+          echo "$SDK_ROOT/platform-tools" >> $GITHUB_PATH
+          echo "$(dirname $SDKMGR)" >> $GITHUB_PATH
 
       - name: 安装 SDK 组件
         run: |
-          sdkmanager --install "platforms;android-33" "build-tools;33.0.1" "platform-tools"
-          yes | sdkmanager --licenses || true
+          set -e
+          yes | "$SDKMGR" --sdk_root="$ANDROID_SDK_ROOT" --licenses > /dev/null 2>&1 || true
+          "$SDKMGR" --sdk_root="$ANDROID_SDK_ROOT" \
+            "platforms;android-33" \
+            "build-tools;33.0.1" \
+            "platform-tools"
+          echo "=== 已安装组件 ==="
+          ls -1 "$ANDROID_SDK_ROOT/platforms"
+          ls -1 "$ANDROID_SDK_ROOT/build-tools"
 
       # ---------- 4. 配置 Gradle 缓存（大幅提速）----------
       - name: 配置 Gradle 缓存
@@ -72,6 +124,7 @@ jobs:
       # ---------- 5. 生成签名文件 ----------
       - name: 生成签名密钥
         run: |
+          set -e
           mkdir -p keystore
           keytool -genkeypair -v \
             -keystore keystore/pppscn.jks \
@@ -80,12 +133,16 @@ jobs:
             -storepass pppscn -keypass pppscn \
             -dname "CN=pppscn, OU=Dev, O=local, L=Beijing, ST=Beijing, C=CN"
 
-          cat > keystore/keystore.properties <<'EOF'
-          storeFile=../keystore/pppscn.jks
-          storePassword=pppscn
-          keyAlias=pppscn
-          keyPassword=pppscn
-          EOF
+          # 用 printf 写入，避免 heredoc 缩进污染 properties 键名
+          printf '%s\n' \
+            'storeFile=../keystore/pppscn.jks' \
+            'storePassword=pppscn' \
+            'keyAlias=pppscn' \
+            'keyPassword=pppscn' \
+            > keystore/keystore.properties
+
+          echo "=== keystore.properties 内容 ==="
+          cat keystore/keystore.properties
 
       # ---------- 6. 设置 local.properties ----------
       - name: 配置 SDK 路径
